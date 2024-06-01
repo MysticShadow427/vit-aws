@@ -10,7 +10,7 @@ import torch.nn as nn
 import torchvision.transforms as T
 import torch.nn.functional as F
 import torch.optim as optim
-from load_vit import Optimized_ViT
+from load_vit import Optimized_ViT,optimize_model
 import torch.utils.data
 import torch.utils.data.distributed
 from torchvision import datasets, transforms
@@ -98,6 +98,7 @@ def eval_model(model, data_loader, loss_fn, device, n_examples):
     return correct_predictions.double() / n_examples, np.mean(losses) 
 
 def save_model(model, model_dir):
+    model = optimize_model(model)
     path = os.path.join(model_dir, 'model.ptl')
     torch.save(model.state_dict(), path)
     logger.info(f"Checkpoint: Saved the best model: {path} \n")
@@ -140,7 +141,8 @@ def model_fn(model_dir):
     logger.info('model_fn')
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = create_model(6)
-    with open(os.path.join(model_dir, 'model.pth'), 'rb') as f:
+    model = optimize_model(model)
+    with open(os.path.join(model_dir, 'model.ptl'), 'rb') as f:
         model.load_state_dict(torch.load(f))
     return model.to(device)
 
